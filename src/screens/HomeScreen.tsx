@@ -9,6 +9,8 @@ import {
   TextInput,
   TouchableOpacity,
   Keyboard,
+  Animated,
+  Easing,
   ListRenderItem,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -117,18 +119,20 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   const renderItem: ListRenderItem<Post> = ({ item }) => (
-    <PostCard post={item} onPress={() => navigation.navigate('Post', { postId: item._id })} />
+    <AnimatedPostCard post={item} onPress={() => navigation.navigate('Post', { postId: item._id })} />
   );
 
   return (
     <View style={styles.container}>
+      {/* Cabeçalho bonito */}
       <View style={styles.header}>
-        <Text style={styles.title}>Blog Educacional</Text>
+        <Text style={styles.subtitle}>Explore ideias e compartilhe conhecimento</Text>
       </View>
 
+      {/* Campo de busca */}
       <View style={styles.searchRow}>
         <TextInput
-          placeholder="Pesquisar posts..."
+          placeholder="🔍 Buscar posts..."
           value={query}
           onChangeText={setQuery}
           returnKeyType="search"
@@ -145,14 +149,15 @@ export default function HomeScreen({ navigation }: Props) {
             }}
             style={styles.clearBtn}
           >
-            <Text style={styles.clearText}>Limpar</Text>
+            <Text style={styles.clearText}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
 
+      {/* Lista de posts */}
       {loading && posts.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color="#007AFF" />
         </View>
       ) : error && posts.length === 0 ? (
         <View style={styles.center}>
@@ -164,12 +169,17 @@ export default function HomeScreen({ navigation }: Props) {
       ) : (
         <FlatList
           data={posts}
-          keyExtractor={(item, index) => `${item._id}-${index}`}
+          keyExtractor={(item) => item._id}
           renderItem={renderItem}
           contentContainerStyle={posts.length === 0 ? styles.flatEmpty : undefined}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListEmptyComponent={() => (
+            <View style={styles.center}>
+              <Text style={styles.emptyText}>Nenhum post encontrado 😕</Text>
+            </View>
+          )}
           ListFooterComponent={() =>
             isFetchingRef.current && hasMore ? (
               <View style={styles.footerLoading}>
@@ -177,66 +187,92 @@ export default function HomeScreen({ navigation }: Props) {
               </View>
             ) : null
           }
-          ListEmptyComponent={() => (
-            <View style={styles.center}>
-              <Text>Nenhum post encontrado.</Text>
-            </View>
-          )}
         />
       )}
     </View>
   );
 }
 
-function PostCard({ post, onPress }: { post: Post; onPress?: () => void }) {
+/* ------------------- CARD COM ANIMAÇÃO SUAVE ------------------- */
+function AnimatedPostCard({ post, onPress }: { post: Post; onPress?: () => void }) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      useNativeDriver: true,
+    }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      useNativeDriver: true,
+    }).start();
+  };
+
   return (
-    <TouchableOpacity style={cardStyles.container} onPress={onPress}>
-      <View style={cardStyles.topRow}>
-        <Text style={cardStyles.title} numberOfLines={2}>
-          {post.titulo}
+    <Animated.View style={[cardStyles.container, { transform: [{ scale: scaleAnim }] }]}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={onPress}
+      >
+        <Text style={cardStyles.title}>{post.titulo}</Text>
+        <Text style={cardStyles.excerpt} numberOfLines={3}>
+          {post.conteudo}
         </Text>
-      </View>
-      <Text style={cardStyles.excerpt} numberOfLines={3}>
-        {post.conteudo}
-      </Text>
-      <View style={cardStyles.metaRow}>
-        <Text style={cardStyles.author}>{post.autor}</Text>
-        <Text style={cardStyles.time}>
-          {formatDistanceToNow(new Date(post.createdAt), {
-            addSuffix: true,
-            locale: ptBR,
-          })}
-        </Text>
-      </View>
-    </TouchableOpacity>
+        <View style={cardStyles.metaRow}>
+          <Text style={cardStyles.author}>{post.autor}</Text>
+          <Text style={cardStyles.time}>
+            {formatDistanceToNow(new Date(post.createdAt), {
+              addSuffix: true,
+              locale: ptBR,
+            })}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
+/* ---------------------------- ESTILOS ---------------------------- */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { padding: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#ddd' },
-  title: { fontSize: 20, fontWeight: '700' },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#ddd',
+  },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: '#222' },
+  subtitle: { fontSize: 14, color: '#666', marginTop: 4 },
   searchRow: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
     alignItems: 'center',
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#bbb',
-    borderRadius: 8,
+    margin: 12,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e3e3e3',
     paddingHorizontal: 10,
-    backgroundColor: '#fafafa',
   },
-  clearBtn: { marginLeft: 8, paddingHorizontal: 8, paddingVertical: 6 },
-  clearText: { color: '#007AFF' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  errorText: { color: 'red', marginBottom: 12, textAlign: 'center' },
-  retryBtn: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#007AFF', borderRadius: 5 },
-  retryText: { color: '#fff' },
+  searchInput: { flex: 1, height: 40, fontSize: 16, color: '#333' },
+  clearBtn: { marginLeft: 6 },
+  clearText: { fontSize: 18, color: '#888' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errorText: { color: 'red', marginBottom: 10 },
+  retryBtn: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  retryText: { color: '#fff', fontWeight: 'bold' },
+  emptyText: { color: '#555', fontSize: 16 },
   flatEmpty: { flexGrow: 1 },
   footerLoading: { paddingVertical: 16 },
 });
@@ -244,22 +280,19 @@ const styles = StyleSheet.create({
 const cardStyles = StyleSheet.create({
   container: {
     marginHorizontal: 12,
-    marginVertical: 8,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#ffffff',
+    marginVertical: 6,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 3,
-    elevation: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#eee',
+    elevation: 2,
   },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  title: { fontSize: 16, fontWeight: '700', marginBottom: 6 },
-  excerpt: { fontSize: 14, color: '#444', marginBottom: 10 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  author: { fontSize: 13, color: '#666' },
+  title: { fontSize: 18, fontWeight: '700', color: '#222', marginBottom: 6 },
+  excerpt: { fontSize: 14, color: '#444', marginBottom: 8, lineHeight: 20 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  author: { fontSize: 13, color: '#007AFF', fontWeight: '500' },
   time: { fontSize: 12, color: '#999' },
 });
