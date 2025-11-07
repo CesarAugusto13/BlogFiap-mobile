@@ -93,7 +93,11 @@ export default function HomeScreen({ navigation }: Props) {
       if (restart) {
         setPosts(data);
       } else {
-        setPosts((prev) => [...prev, ...data]);
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p._id));
+          const newPosts = data.filter((p: any) => !existingIds.has(p._id));
+          return [...prev, ...newPosts];
+        });
       }
       setHasMore(data.length >= PAGE_SIZE);
       setError(null);
@@ -160,7 +164,7 @@ export default function HomeScreen({ navigation }: Props) {
       ) : (
         <FlatList
           data={posts}
-          keyExtractor={(item) => String(item._id)}
+          keyExtractor={(item, index) => `${item._id}-${index}`}
           renderItem={renderItem}
           contentContainerStyle={posts.length === 0 ? styles.flatEmpty : undefined}
           onEndReached={loadMore}
