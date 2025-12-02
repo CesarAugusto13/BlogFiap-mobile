@@ -13,19 +13,25 @@ import { EventEmitter } from 'eventemitter3';
 import AdminPostsScreen from '../screens/AdminPostsScreen';
 import CreatePostScreen from '../screens/CreatePostScreen';
 import EditPostScreen from '../screens/EditPostScreen';
+
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import PostScreen from '../screens/PostScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import SplashScreen from '../screens/SplashScreen';
-import ProfessorAdminScreen from '../screens/AdminProfessoresScreen';
 
-// 🔥 EVENTO GLOBAL PARA ATUALIZAR LOGIN
+import ProfessoresListScreen from '../screens/ProfessoresListScreen';
+import CreateProfessorScreen from '../screens/CreateProfessorScreen';
+import EditProfessorScreen from '../screens/EditProfessorScreen';
+
 export const authEvents = new EventEmitter();
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
+/* ---------------------------
+   HOME STACK
+------------------------------ */
 function HomeStack({ navigation }) {
   return (
     <Stack.Navigator>
@@ -43,15 +49,14 @@ function HomeStack({ navigation }) {
         }}
       />
 
-      <Stack.Screen
-        name="Post"
-        component={PostScreen}
-        options={{ title: "Post", headerShown: true }}
-      />
+      <Stack.Screen name="Post" component={PostScreen} options={{ title: "Post", headerShown: true }} />
     </Stack.Navigator>
   );
 }
 
+/* ---------------------------
+   POSTS ADMIN STACK
+------------------------------ */
 function AdminStack() {
   return (
     <Stack.Navigator>
@@ -75,6 +80,35 @@ function AdminStack() {
   );
 }
 
+/* ---------------------------
+   PROFESSORES STACK (NOVO)
+------------------------------ */
+function ProfessoresStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="ProfessoresList"
+        component={ProfessoresListScreen}
+        options={({ navigation }) => ({
+          title: "Professores",
+          headerShown: true,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+              <Text style={{ fontSize: 22, marginLeft: 10 }}>☰</Text>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+
+      <Stack.Screen name="CreateProfessor" component={CreateProfessorScreen} options={{ title: "Criar Professor", headerShown: true }} />
+      <Stack.Screen name="EditProfessor" component={EditProfessorScreen} options={{ title: "Editar Professor", headerShown: true }} />
+    </Stack.Navigator>
+  );
+}
+
+/* ---------------------------
+   CUSTOM DRAWER
+------------------------------ */
 function CustomDrawerContent(props) {
   const [professorNome, setProfessorNome] = useState(null);
 
@@ -121,6 +155,9 @@ function CustomDrawerContent(props) {
   );
 }
 
+/* ---------------------------
+   MAIN APP NAVIGATOR
+------------------------------ */
 export default function AppNavigator() {
   const [professorLogado, setProfessorLogado] = React.useState(false);
 
@@ -149,6 +186,7 @@ export default function AppNavigator() {
           drawerLabelStyle: { fontSize: 16 },
         }}
       >
+
         <Drawer.Screen name="Splash" component={SplashScreen} options={{ drawerItemStyle: { height: 0 } }} />
 
         <Drawer.Screen name="HomeScreen" component={HomeStack} options={{ drawerLabel: "🏠 Início" }} />
@@ -183,18 +221,31 @@ export default function AppNavigator() {
           })}
         />
 
-        {/* 🔐 APARECE APENAS PARA PROFESSOR LOGADO */}
+        {/* 🔐 Disponível apenas quando logado */}
         {professorLogado && (
           <>
-            <Drawer.Screen name="Admin" component={AdminStack} options={{ drawerLabel: "🛠️ Administração de Posts" }} />
-            <Drawer.Screen name="Professores" component={ProfessorAdminScreen} options={{ drawerLabel: "👨‍🏫 Professores" }} />
+            <Drawer.Screen
+              name="Admin"
+              component={AdminStack}
+              options={{ drawerLabel: "🛠 Administração de Posts" }}
+            />
+
+            <Drawer.Screen
+              name="Professores"
+              component={ProfessoresStack}
+              options={{ drawerLabel: "👨‍🏫 Professores" }}
+            />
           </>
         )}
+
       </Drawer.Navigator>
     </NavigationContainer>
   );
 }
 
+/* ---------------------------
+   STYLES
+------------------------------ */
 const styles = StyleSheet.create({
   header: {
     padding: 16,
