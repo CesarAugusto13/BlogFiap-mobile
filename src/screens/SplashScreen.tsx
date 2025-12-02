@@ -3,13 +3,15 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SplashScreen({ navigation }: any) {
+
   useEffect(() => {
     async function checkLogin() {
       const token = await AsyncStorage.getItem('accessToken');
+
       if (token) {
         navigation.reset({
           index: 0,
-          routes: [{ name: 'Home' }],
+          routes: [{ name: 'HomeScreen' }],
         });
       } else {
         navigation.reset({

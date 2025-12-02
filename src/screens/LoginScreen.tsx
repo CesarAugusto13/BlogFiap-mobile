@@ -1,8 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../api/apiClient';
-import { set } from 'date-fns';
+
+// 🔥 Import do sistema de eventos
+import { authEvents } from '../navigation/AppNavigator';
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
@@ -16,17 +26,25 @@ export default function LoginScreen({ navigation }: any) {
     }
 
     setLoading(true);
+
     try {
       const res = await api.post('/professores/login', { email, senha });
+      const { token, nome, email: emailRetorno } = res.data;
 
-      await AsyncStorage.setItem('accessToken', res.data.token);
-      await AsyncStorage.setItem('professorNome', res.data.nome);
-      await AsyncStorage.setItem('professorEmail', res.data.email);
+      // 🔥 Salva login
+      await AsyncStorage.setItem('accessToken', token);
+      await AsyncStorage.setItem('professorNome', nome);
+      await AsyncStorage.setItem('professorEmail', emailRetorno);
 
-      Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      setEmail('');
-      setSenha('');
-      navigation.navigate('Home');
+      // 🔥 Notifica o AppNavigator para RECARREGAR o Drawer
+      authEvents.emit("login");
+
+      // 🔥 Redireciona
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'HomeScreen' }],
+      });
+
     } catch (err: any) {
       console.error(err);
       Alert.alert('Erro', err.response?.data?.message || 'Falha no login.');

@@ -1,43 +1,102 @@
-import 'react-native-gesture-handler';
-import 'react-native-reanimated';
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItemList,
+} from '@react-navigation/drawer';
+import { NavigationContainer, useFocusEffect } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, { useCallback, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { EventEmitter } from 'eventemitter3';
 
-// Telas
+import AdminPostsScreen from '../screens/AdminPostsScreen';
+import CreatePostScreen from '../screens/CreatePostScreen';
+import EditPostScreen from '../screens/EditPostScreen';
 import HomeScreen from '../screens/HomeScreen';
-import PostScreen from '../screens/PostScreen';
 import LoginScreen from '../screens/LoginScreen';
+import PostScreen from '../screens/PostScreen';
 import RegisterScreen from '../screens/RegisterScreen';
-import SplashScreen from '../screens/SplashScreen'; // 👈 adicione aqui
+import SplashScreen from '../screens/SplashScreen';
+import ProfessorAdminScreen from '../screens/AdminProfessoresScreen';
+
+// 🔥 EVENTO GLOBAL PARA ATUALIZAR LOGIN
+export const authEvents = new EventEmitter();
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
-function HomeStack() {
+function HomeStack({ navigation }) {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false}} />
-      <Stack.Screen name="Post" component={PostScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          title: "Início",
+          headerShown: true,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+              <Text style={{ fontSize: 22, marginLeft: 10 }}>☰</Text>
+            </TouchableOpacity>
+          ),
+        }}
+      />
+
+      <Stack.Screen
+        name="Post"
+        component={PostScreen}
+        options={{ title: "Post", headerShown: true }}
+      />
     </Stack.Navigator>
   );
 }
 
-function CustomDrawerContent(props: any) {
-  const [professorNome, setProfessorNome] = useState<string | null>(null);
+function AdminStack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="AdminPosts"
+        component={AdminPostsScreen}
+        options={({ navigation }) => ({
+          title: "Administração",
+          headerShown: true,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+              <Text style={{ fontSize: 22, marginLeft: 10 }}>☰</Text>
+            </TouchableOpacity>
+          ),
+        })}
+      />
 
-  useEffect(() => {
-    AsyncStorage.getItem('professorNome').then((nome) => setProfessorNome(nome));
-  }, []);
+      <Stack.Screen name="EditPost" component={EditPostScreen} options={{ title: "Editar Post", headerShown: true }} />
+      <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ title: "Criar Post", headerShown: true }} />
+    </Stack.Navigator>
+  );
+}
+
+function CustomDrawerContent(props) {
+  const [professorNome, setProfessorNome] = useState(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      async function load() {
+        const nome = await AsyncStorage.getItem("professorNome");
+        setProfessorNome(nome);
+      }
+      load();
+    }, [])
+  );
 
   async function handleLogout() {
     await AsyncStorage.clear();
+    setProfessorNome(null);
+
+    authEvents.emit("login");
+
     props.navigation.reset({
       index: 0,
-      routes: [{ name: 'Login' }],
+      routes: [{ name: "Login" }],
     });
   }
 
@@ -45,9 +104,14 @@ function CustomDrawerContent(props: any) {
     <DrawerContentScrollView {...props}>
       <View style={styles.header}>
         <Text style={styles.appTitle}>🎓 Blog Educacional</Text>
-        {professorNome && <Text style={styles.professorName}>Bem-vindo(a), {professorNome}</Text>}
+
+        <Text style={styles.professorName}>
+          {professorNome ? `Bem-vindo(a), ${professorNome}` : "Bem-vindo(a), Estudante"}
+        </Text>
       </View>
+
       <DrawerItemList {...props} />
+
       {professorNome && (
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutText}>Sair</Text>
@@ -58,30 +122,104 @@ function CustomDrawerContent(props: any) {
 }
 
 export default function AppNavigator() {
+  const [professorLogado, setProfessorLogado] = React.useState(false);
+
+  React.useEffect(() => {
+    async function checkLogin() {
+      const nome = await AsyncStorage.getItem("professorNome");
+      setProfessorLogado(!!nome);
+    }
+
+    checkLogin();
+    authEvents.on("login", checkLogin);
+
+    return () => {
+      authEvents.off("login", checkLogin);
+    };
+  }, []);
+
   return (
     <NavigationContainer>
       <Drawer.Navigator
-        initialRouteName="Splash" // 👈 começa aqui
+        initialRouteName="Splash"
         drawerContent={(props) => <CustomDrawerContent {...props} />}
         screenOptions={{
-          headerShown: true,
-          drawerActiveTintColor: '#007AFF',
+          headerShown: false,
+          drawerActiveTintColor: "#007AFF",
           drawerLabelStyle: { fontSize: 16 },
         }}
       >
         <Drawer.Screen name="Splash" component={SplashScreen} options={{ drawerItemStyle: { height: 0 } }} />
-        <Drawer.Screen name="Home" component={HomeStack} options={{ drawerLabel: '🏠 Início' }} />
-        <Drawer.Screen name="Login" component={LoginScreen} options={{ drawerLabel: '🔐 Login' }} />
-        <Drawer.Screen name="Register" component={RegisterScreen} options={{ drawerLabel: '🧾 Cadastro' }} />
+
+        <Drawer.Screen name="HomeScreen" component={HomeStack} options={{ drawerLabel: "🏠 Início" }} />
+
+        <Drawer.Screen
+          name="Login"
+          component={LoginScreen}
+          options={({ navigation }) => ({
+            drawerLabel: "🔐 Login",
+            headerShown: true,
+            title: "Login",
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                <Text style={{ fontSize: 22, marginLeft: 10 }}>☰</Text>
+              </TouchableOpacity>
+            ),
+          })}
+        />
+
+        <Drawer.Screen
+          name="Register"
+          component={RegisterScreen}
+          options={({ navigation }) => ({
+            drawerLabel: "🧾 Cadastro",
+            headerShown: true,
+            title: "Cadastro",
+            headerLeft: () => (
+              <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                <Text style={{ fontSize: 22, marginLeft: 10 }}>☰</Text>
+              </TouchableOpacity>
+            ),
+          })}
+        />
+
+        {/* 🔐 APARECE APENAS PARA PROFESSOR LOGADO */}
+        {professorLogado && (
+          <>
+            <Drawer.Screen name="Admin" component={AdminStack} options={{ drawerLabel: "🛠️ Administração de Posts" }} />
+            <Drawer.Screen name="Professores" component={ProfessorAdminScreen} options={{ drawerLabel: "👨‍🏫 Professores" }} />
+          </>
+        )}
       </Drawer.Navigator>
     </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { padding: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#ddd' },
-  appTitle: { fontSize: 18, fontWeight: 'bold' },
-  professorName: { fontSize: 14, color: '#555', marginTop: 4 },
-  logoutBtn: { marginTop: 20, marginHorizontal: 16, paddingVertical: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#ddd' },
-  logoutText: { color: '#e63946', fontWeight: 'bold', fontSize: 16 },
+  header: {
+    padding: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#ddd",
+  },
+  appTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  professorName: {
+    fontSize: 14,
+    color: "#555",
+    marginTop: 4,
+  },
+  logoutBtn: {
+    marginTop: 20,
+    marginHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#ddd",
+  },
+  logoutText: {
+    color: "#e63946",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });

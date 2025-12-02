@@ -17,11 +17,20 @@ export default function RegisterScreen({ navigation }: any) {
     setLoading(true);
     try {
       await api.post('/professores/register', { nome, email, senha });
-      Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
-      navigation.navigate('Login');
+
+      Alert.alert('Sucesso', 'Cadastro realizado! Agora faça login.');
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'HomeScreen' }],
+      });
+
     } catch (err: any) {
       console.error(err);
-      Alert.alert('Erro', err.response?.data?.message || 'Falha ao registrar professor.');
+      Alert.alert(
+        'Erro',
+        err.response?.data?.message || 'Falha ao registrar professor.'
+      );
     } finally {
       setLoading(false);
     }
@@ -56,7 +65,11 @@ export default function RegisterScreen({ navigation }: any) {
       />
 
       <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Cadastrar</Text>}
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Cadastrar</Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
