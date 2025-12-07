@@ -1,212 +1,189 @@
-📱 EducaOn Mobile – Aplicativo Mobile de Blogging Educacional
-📝 Descrição
+EducaOn Mobile - Aplicação de Blogging Dinâmico
+Descrição
 
-EducaOn Mobile é a versão mobile do sistema educacional de blogging desenvolvido para professores e estudantes. Esta aplicação permite visualizar posts, pesquisar conteúdos, gerenciar publicações e administrar professores, tudo pelo smartphone.
-Faz parte do Tech Challenge da FIAP, integrando React Native com uma API Node.js.
+EducaOn Mobile é a versão mobile da aplicação de blogging dinâmico voltada para professores e estudantes, desenvolvida como parte do Tech Challenge do curso. O aplicativo permite criar, editar, visualizar e administrar postagens, além de realizar autenticação exclusiva para professores. A navegação é totalmente adaptada para dispositivos móveis, oferecendo uma experiência fluida e moderna.
 
-🚀 Funcionalidades
-📚 Para Usuários
+Funcionalidades
 
-Exibição de posts com pesquisa por:
+Listagem de posts com busca por palavras-chave (título, conteúdo e autor)
 
-título
+Visualização detalhada de posts
 
-conteúdo
+Cadastro e login de professores com autenticação JWT
 
-autor
+Criação, edição e exclusão de postagens via área administrativa
 
-Visualização completa de cada post
+Listagem, edição e remoção de professores
 
-Listagem atualizada em tempo real
+Drawer Navigation com exibição do nome do professor logado
 
-Interface simples, fluida e responsiva
+Atualização automática das telas ao retornar (focus effect)
 
-🧑‍🏫 Para Professores (área autenticada)
+Interface adaptada 100% para dispositivos móveis
 
-Login e autenticação com JWT
+Tecnologias Utilizadas
 
-Criação de posts
+Mobile: React Native (Expo), TypeScript
 
-Edição de posts
+Navegação: React Navigation (Stack Navigator + Drawer Navigator)
 
-Exclusão de posts
+Back-end: Node.js (API REST já implementada)
 
-Administração de professores
+Comunicação: Axios para chamadas HTTP
 
-Pesquisa de professores por nome e email
+Autenticação: JWT (JSON Web Tokens)
 
-Drawer com o nome do professor autenticado
+Armazenamento: AsyncStorage para token e dados do usuário
 
-⚙️ Funcionalidades Gerais
+Outros: Animated API para animações, ActivityIndicator para carregamento
 
-Persistência de sessão com AsyncStorage
-
-Navegação dinâmica com React Navigation
-
-Tratamento completo de erros nas requisições
-
-Animações suaves nas listas
-
-Telas seguras com verificação automática de login
-
-🛠️ Tecnologias Utilizadas
-Mobile
-
-React Native (Expo)
-
-React Navigation (Stack + Drawer)
-
-TypeScript
-
-Axios (chamadas HTTP)
-
-AsyncStorage (persistência local)
-
-Animated API para efeitos visuais
-
-Back-end
-
-Node.js + Express
-
-API REST já desenvolvida (professores + posts)
-
-Autenticação com JWT
-
-MongoDB com Mongoose
-
-📁 Estrutura do Projeto
+Estrutura do Projeto
 /educaon-mobile
 ├── /src
 │   ├── /screens
+│   │   ├── HomeScreen.tsx
 │   │   ├── LoginScreen.tsx
 │   │   ├── RegisterScreen.tsx
-│   │   ├── HomeScreen.tsx
 │   │   ├── PostScreen.tsx
 │   │   ├── AdminPostsScreen.tsx
 │   │   ├── ProfessoresListScreen.tsx
 │   │   ├── CreatePostScreen.tsx
 │   │   ├── EditPostScreen.tsx
 │   │   └── CreateProfessorScreen.tsx
+│   ├── /components
+│   │   └── AnimatedPostCard.tsx
 │   ├── /navigation
 │   │   ├── AppNavigator.tsx
 │   │   └── DrawerNavigator.tsx
 │   ├── /api
 │   │   └── apiClient.ts
-│   ├── /components
-│   │   └── AnimatedPostCard.tsx
-│   ├── /utils
-│   │   └── auth.ts
 │   └── App.tsx
 ├── package.json
+├── app.json
 └── README.md
 
-▶️ Como Rodar o Projeto Mobile
+Como Rodar o Projeto Localmente
 Pré-requisitos
 
-Node.js (18+ recomendado)
+Node.js (versão 18 ou superior recomendada)
 
 Expo CLI instalado globalmente:
 
 npm install -g expo
 
 
-API Node.js rodando localmente (porta padrão exemplo: http://192.168.x.x:3000)
+Back-end Node.js rodando com os endpoints REST disponíveis (verificar repositório do back-end: https://github.com/CesarAugusto13/BlogFiap
+)
 
-1. Clone o Repositório
+Passos
+
+Clone o repositório:
+
 git clone https://github.com/CesarAugusto13/educaon-mobile.git
 cd educaon-mobile
 
-2. Instale as Dependências
+
+Instale as dependências:
+
 npm install
 # ou
-yarn
+yarn install
 
-3. Configure a URL da API
 
-No arquivo:
+Configure a URL base da API em:
 
 src/api/apiClient.ts
 
 
-Ajustar:
+Inicie o app:
 
-baseURL: "http://SEU-IP-LOCAL:3000/api",
-
-4. Inicie o App
 npx expo start
 
 
-Você pode abrir no:
+Abra no dispositivo:
 
-Celular (app Expo Go)
+App Expo Go (Android/iOS)
 
 Emulador Android
 
-Emulador iOS (no Mac)
+iOS Simulator (macOS)
 
-🧱 Arquitetura da Aplicação
+Arquitetura da Aplicação
 
-React Navigation (Stack + Drawer): organização completa de telas
+O app utiliza Stack Navigation para fluxo principal e Drawer Navigation para menu lateral.
 
-AuthEvents: atualização dinâmica do Drawer após login
+Após o login, o nome e email do professor são exibidos no Drawer.
 
-AsyncStorage: guarda token, nome e email do professor
+Todas as requisições autenticadas enviam o token JWT via header.
 
-Axios: todas as chamadas HTTP com interceptadores opcionais
+A barra de busca da Home faz filtro inteligente por título, conteúdo e autor.
 
-Busca dinâmica: filtros em tempo real por título, conteúdo, autor e nome do professor
+Telas administrativas só ficam disponíveis após login.
 
-Fluxo protegido: telas administrativas só abrem autenticadas
+A UI é atualizada automaticamente quando a tela volta ao foco (useFocusEffect).
 
-🧭 Guia de Uso
-🔑 Login
+Guia de Uso
+Login
 
-Professores entram com email e senha.
-Se válido → app recarrega navegação e mostra menu com nome do professor.
+Professores realizam autenticação com email e senha.
+Após sucesso:
 
-📝 Home
+Token JWT é salvo no AsyncStorage
 
-Mostra posts
+Drawer é atualizado
 
-Busca por título, conteúdo e autor
+Usuário é redirecionado para a Home
 
-📄 Detalhes do Post
+Home
 
-Visualização completa
+Exibe todos os posts
 
-Atualizações em tempo real
+Barra de pesquisa dinâmica
 
-🧑‍🏫 Administração
+Cards animados com resumo do conteúdo
 
-Criar, editar e excluir posts
+Post Detalhado
 
-Listar e pesquisar professores
+Exibe título, conteúdo, autor e data formatada
 
-Excluir professores
+Administração
 
-🧩 Desafios & Experiências do Projeto
+Apenas para professores logados:
 
-Integração de app mobile com API Node.js real
+Criar post
 
-Implementação de autenticação JWT no mobile
+Editar post
 
-Manutenção de sessão com AsyncStorage
+Excluir post
 
-Criação de Drawer baseado em estado global
+Listar professores
 
-Tratamento de erros e feedback visual ao usuário
+Criar professor
 
-Animações e UX responsiva
+Editar professor
 
-Padronização de telas usando componentes reutilizáveis
+Remover professor
 
-Gestão de buscas complexas em listas
+Desafios e Experiências
 
-📬 Contato
+Integração completa entre mobile e API em Node.js
+
+Navegação avançada com Drawer sincronizado com autenticação
+
+Busca dinâmica otimizada com debounce
+
+Tratamento de erros em tempo real com feedback visual
+
+Implementação de autenticação persistente com AsyncStorage
+
+Tornar toda experiência fluida e responsiva em dispositivos móveis
+
+Contato
+
+Para dúvidas ou sugestões, entre em contato:
 
 Nome: César Augusto de Oliveira Santos
+
 Email: cesiha13@gmail.com
 
 GitHub: https://github.com/CesarAugusto13
-
-LinkedIn: [(Linkedin)](https://www.linkedin.com/in/c%C3%A9sar-augusto-de-oliveira-santos/)
