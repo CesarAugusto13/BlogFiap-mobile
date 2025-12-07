@@ -1,8 +1,8 @@
-# EducaOn Mobile - Aplicação de Blogging Dinâmico
+# BlogFiap Mobile - Aplicação de Blogging Dinâmico
 
 ## Descrição
 
-EducaOn Mobile é a versão mobile da aplicação de blogging dinâmico voltada para professores e estudantes, desenvolvida como parte do Tech Challenge do curso. O aplicativo permite criar, editar, visualizar e administrar postagens, além de realizar autenticação exclusiva para professores. A navegação é totalmente adaptada para dispositivos móveis, oferecendo uma experiência fluida e moderna.
+BlogFiap Mobile é a versão mobile da aplicação de blogging dinâmico voltada para professores e estudantes, desenvolvida como parte do Tech Challenge do curso. O aplicativo permite criar, editar, visualizar e administrar postagens, além de realizar autenticação exclusiva para professores. A navegação é totalmente adaptada para dispositivos móveis, oferecendo uma experiência fluida e moderna.
 
 ---
 
@@ -74,7 +74,7 @@ EducaOn Mobile é a versão mobile da aplicação de blogging dinâmico voltada 
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/CesarAugusto13/educaon-mobile.git
+git clone https://github.com/CesarAugusto13/blogfiap-mobile.git
 cd educaon-mobile
 ```
 
