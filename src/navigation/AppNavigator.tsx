@@ -29,9 +29,7 @@ export const authEvents = new EventEmitter();
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
-/* ---------------------------
-   HOME STACK
------------------------------- */
+
 function HomeStack({ navigation }) {
   return (
     <Stack.Navigator>
@@ -54,9 +52,7 @@ function HomeStack({ navigation }) {
   );
 }
 
-/* ---------------------------
-   POSTS ADMIN STACK
------------------------------- */
+
 function AdminStack() {
   return (
     <Stack.Navigator>
@@ -80,9 +76,7 @@ function AdminStack() {
   );
 }
 
-/* ---------------------------
-   PROFESSORES STACK (NOVO)
------------------------------- */
+
 function ProfessoresStack() {
   return (
     <Stack.Navigator>
@@ -155,9 +149,7 @@ function CustomDrawerContent(props) {
   );
 }
 
-/* ---------------------------
-   MAIN APP NAVIGATOR
------------------------------- */
+
 export default function AppNavigator() {
   const [professorLogado, setProfessorLogado] = React.useState(false);
 
@@ -243,9 +235,6 @@ export default function AppNavigator() {
   );
 }
 
-/* ---------------------------
-   STYLES
------------------------------- */
 const styles = StyleSheet.create({
   header: {
     padding: 16,

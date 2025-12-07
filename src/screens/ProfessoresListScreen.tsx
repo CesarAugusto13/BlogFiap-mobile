@@ -108,9 +108,6 @@ export default function ProfessoresListScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Pressable style={styles.menuBtn} onPress={() => navigation.toggleDrawer()}>
-        <Ionicons name="menu" size={28} color="#000" />
-      </Pressable>
 
       <Text style={styles.title}>👨‍🏫 Professores</Text>
 

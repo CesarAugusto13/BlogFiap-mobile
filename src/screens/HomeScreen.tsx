@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   Keyboard,
   Animated,
-  Easing,
   ListRenderItem,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -39,15 +38,15 @@ export default function HomeScreen({ navigation }: Props) {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingQueryRef = useRef<string>('');
-  const isFetchingRef = useRef(false);
   const PAGE_SIZE = 10;
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
     loadInitial();
@@ -56,22 +55,32 @@ export default function HomeScreen({ navigation }: Props) {
     };
   }, []);
 
+  // 🔍 Filtro local para título + autor + conteúdo
   useEffect(() => {
-    pendingQueryRef.current = query;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setPage(1);
-      setHasMore(true);
-      fetchPosts({ page: 1, restart: true, q: pendingQueryRef.current });
-    }, 300);
-  }, [query]);
+    if (!query.trim()) {
+      setFilteredPosts(posts);
+      return;
+    }
+
+    const text = query.toLowerCase();
+
+    const filtrados = posts.filter((p) => {
+      return (
+        p.titulo.toLowerCase().includes(text) ||
+        p.conteudo.toLowerCase().includes(text) ||
+        p.autor.toLowerCase().includes(text)
+      );
+    });
+
+    setFilteredPosts(filtrados);
+  }, [query, posts]);
 
   async function loadInitial() {
     setLoading(true);
     setError(null);
     setPage(1);
     setHasMore(true);
-    await fetchPosts({ page: 1, restart: true, q: query });
+    await fetchPosts({ page: 1, restart: true });
     setLoading(false);
   }
 
@@ -80,32 +89,39 @@ export default function HomeScreen({ navigation }: Props) {
     setError(null);
     setPage(1);
     setHasMore(true);
-    await fetchPosts({ page: 1, restart: true, q: query });
+    await fetchPosts({ page: 1, restart: true });
     setRefreshing(false);
   }
 
-  type FetchOpts = { page: number; restart?: boolean; q?: string };
+  type FetchOpts = { page: number; restart?: boolean };
 
-  async function fetchPosts({ page, restart = false, q = '' }: FetchOpts) {
+  async function fetchPosts({ page, restart = false }: FetchOpts) {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
+
     try {
       const res = await api.get('/posts');
       const data = Array.isArray(res.data) ? res.data : [];
+
       if (restart) {
         setPosts(data);
+        setFilteredPosts(data);
       } else {
         setPosts((prev) => {
-          const existingIds = new Set(prev.map((p) => p._id));
-          const newPosts = data.filter((p: any) => !existingIds.has(p._id));
-          return [...prev, ...newPosts];
+          const ids = new Set(prev.map((p) => p._id));
+          const novos = data.filter((p) => !ids.has(p._id));
+          const merged = [...prev, ...novos];
+
+          setFilteredPosts(merged);
+          return merged;
         });
       }
+
       setHasMore(data.length >= PAGE_SIZE);
       setError(null);
     } catch (err: any) {
       console.error('fetchPosts error', err);
-      setError(err?.response?.data?.message ?? err.message ?? 'Erro ao carregar posts');
+      setError('Erro ao carregar posts.');
     } finally {
       isFetchingRef.current = false;
     }
@@ -115,38 +131,37 @@ export default function HomeScreen({ navigation }: Props) {
     if (!hasMore || loading || refreshing) return;
     const next = page + 1;
     setPage(next);
-    await fetchPosts({ page: next, restart: false, q: query });
+    await fetchPosts({ page: next });
   }
 
   const renderItem: ListRenderItem<Post> = ({ item }) => (
-    <AnimatedPostCard post={item} onPress={() => navigation.navigate('Post', { postId: item._id })} />
+    <AnimatedPostCard
+      post={item}
+      onPress={() => navigation.navigate('Post', { postId: item._id })}
+    />
   );
 
   return (
     <View style={styles.container}>
-      {/* Cabeçalho bonito */}
+      {/* Cabeçalho */}
       <View style={styles.header}>
         <Text style={styles.subtitle}>Explore ideias e compartilhe conhecimento</Text>
       </View>
 
-      {/* Campo de busca */}
+      {/* 🔍 Campo de busca */}
       <View style={styles.searchRow}>
         <TextInput
-          placeholder="🔍 Buscar posts..."
+          placeholder="🔍 Buscar por título, autor ou conteúdo..."
           value={query}
           onChangeText={setQuery}
           returnKeyType="search"
           onSubmitEditing={() => Keyboard.dismiss()}
           style={styles.searchInput}
         />
+
         {query.length > 0 && (
           <TouchableOpacity
-            onPress={() => {
-              setQuery('');
-              setPage(1);
-              setHasMore(true);
-              fetchPosts({ page: 1, restart: true, q: '' });
-            }}
+            onPress={() => setQuery('')}
             style={styles.clearBtn}
           >
             <Text style={styles.clearText}>✕</Text>
@@ -154,7 +169,7 @@ export default function HomeScreen({ navigation }: Props) {
         )}
       </View>
 
-      {/* Lista de posts */}
+      {/* Lista */}
       {loading && posts.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#007AFF" />
@@ -162,16 +177,13 @@ export default function HomeScreen({ navigation }: Props) {
       ) : error && posts.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={loadInitial}>
-            <Text style={styles.retryText}>Tentar novamente</Text>
-          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
-          data={posts}
+          data={filteredPosts}
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
-          contentContainerStyle={posts.length === 0 ? styles.flatEmpty : undefined}
+          contentContainerStyle={filteredPosts.length === 0 ? styles.flatEmpty : undefined}
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -193,38 +205,33 @@ export default function HomeScreen({ navigation }: Props) {
   );
 }
 
-/* ------------------- CARD COM ANIMAÇÃO SUAVE ------------------- */
+
 function AnimatedPostCard({ post, onPress }: { post: Post; onPress?: () => void }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97,
-      useNativeDriver: true,
-    }).start();
+  const pressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
   };
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 3,
-      useNativeDriver: true,
-    }).start();
+  const pressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
   };
 
   return (
     <Animated.View style={[cardStyles.container, { transform: [{ scale: scaleAnim }] }]}>
       <TouchableOpacity
         activeOpacity={0.9}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
         onPress={onPress}
       >
         <Text style={cardStyles.title}>{post.titulo}</Text>
         <Text style={cardStyles.excerpt} numberOfLines={3}>
           {post.conteudo}
         </Text>
+
         <View style={cardStyles.metaRow}>
           <Text style={cardStyles.author}>{post.autor}</Text>
+
           <Text style={cardStyles.time}>
             {formatDistanceToNow(new Date(post.createdAt), {
               addSuffix: true,
@@ -237,9 +244,11 @@ function AnimatedPostCard({ post, onPress }: { post: Post; onPress?: () => void 
   );
 }
 
+
 /* ---------------------------- ESTILOS ---------------------------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
+
   header: {
     paddingHorizontal: 16,
     paddingTop: 24,
@@ -248,8 +257,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#ddd',
   },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: '#222' },
+
   subtitle: { fontSize: 14, color: '#666', marginTop: 4 },
+
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -260,20 +270,16 @@ const styles = StyleSheet.create({
     borderColor: '#e3e3e3',
     paddingHorizontal: 10,
   },
+
   searchInput: { flex: 1, height: 40, fontSize: 16, color: '#333' },
   clearBtn: { marginLeft: 6 },
   clearText: { fontSize: 18, color: '#888' },
+
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   errorText: { color: 'red', marginBottom: 10 },
-  retryBtn: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  retryText: { color: '#fff', fontWeight: 'bold' },
   emptyText: { color: '#555', fontSize: 16 },
   flatEmpty: { flexGrow: 1 },
+
   footerLoading: { paddingVertical: 16 },
 });
 
