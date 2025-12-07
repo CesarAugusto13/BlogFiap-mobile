@@ -1,50 +1,212 @@
-# Welcome to your Expo app 👋
+📱 EducaOn Mobile – Aplicativo Mobile de Blogging Educacional
+📝 Descrição
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+EducaOn Mobile é a versão mobile do sistema educacional de blogging desenvolvido para professores e estudantes. Esta aplicação permite visualizar posts, pesquisar conteúdos, gerenciar publicações e administrar professores, tudo pelo smartphone.
+Faz parte do Tech Challenge da FIAP, integrando React Native com uma API Node.js.
 
-## Get started
+🚀 Funcionalidades
+📚 Para Usuários
 
-1. Install dependencies
+Exibição de posts com pesquisa por:
 
-   ```bash
-   npm install
-   ```
+título
 
-2. Start the app
+conteúdo
 
-   ```bash
-   npx expo start
-   ```
+autor
 
-In the output, you'll find options to open the app in a
+Visualização completa de cada post
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Listagem atualizada em tempo real
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Interface simples, fluida e responsiva
 
-## Get a fresh project
+🧑‍🏫 Para Professores (área autenticada)
 
-When you're ready, run:
+Login e autenticação com JWT
 
-```bash
-npm run reset-project
-```
+Criação de posts
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Edição de posts
 
-## Learn more
+Exclusão de posts
 
-To learn more about developing your project with Expo, look at the following resources:
+Administração de professores
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Pesquisa de professores por nome e email
 
-## Join the community
+Drawer com o nome do professor autenticado
 
-Join our community of developers creating universal apps.
+⚙️ Funcionalidades Gerais
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Persistência de sessão com AsyncStorage
+
+Navegação dinâmica com React Navigation
+
+Tratamento completo de erros nas requisições
+
+Animações suaves nas listas
+
+Telas seguras com verificação automática de login
+
+🛠️ Tecnologias Utilizadas
+Mobile
+
+React Native (Expo)
+
+React Navigation (Stack + Drawer)
+
+TypeScript
+
+Axios (chamadas HTTP)
+
+AsyncStorage (persistência local)
+
+Animated API para efeitos visuais
+
+Back-end
+
+Node.js + Express
+
+API REST já desenvolvida (professores + posts)
+
+Autenticação com JWT
+
+MongoDB com Mongoose
+
+📁 Estrutura do Projeto
+/educaon-mobile
+├── /src
+│   ├── /screens
+│   │   ├── LoginScreen.tsx
+│   │   ├── RegisterScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── PostScreen.tsx
+│   │   ├── AdminPostsScreen.tsx
+│   │   ├── ProfessoresListScreen.tsx
+│   │   ├── CreatePostScreen.tsx
+│   │   ├── EditPostScreen.tsx
+│   │   └── CreateProfessorScreen.tsx
+│   ├── /navigation
+│   │   ├── AppNavigator.tsx
+│   │   └── DrawerNavigator.tsx
+│   ├── /api
+│   │   └── apiClient.ts
+│   ├── /components
+│   │   └── AnimatedPostCard.tsx
+│   ├── /utils
+│   │   └── auth.ts
+│   └── App.tsx
+├── package.json
+└── README.md
+
+▶️ Como Rodar o Projeto Mobile
+Pré-requisitos
+
+Node.js (18+ recomendado)
+
+Expo CLI instalado globalmente:
+
+npm install -g expo
+
+
+API Node.js rodando localmente (porta padrão exemplo: http://192.168.x.x:3000)
+
+1. Clone o Repositório
+git clone https://github.com/CesarAugusto13/educaon-mobile.git
+cd educaon-mobile
+
+2. Instale as Dependências
+npm install
+# ou
+yarn
+
+3. Configure a URL da API
+
+No arquivo:
+
+src/api/apiClient.ts
+
+
+Ajustar:
+
+baseURL: "http://SEU-IP-LOCAL:3000/api",
+
+4. Inicie o App
+npx expo start
+
+
+Você pode abrir no:
+
+Celular (app Expo Go)
+
+Emulador Android
+
+Emulador iOS (no Mac)
+
+🧱 Arquitetura da Aplicação
+
+React Navigation (Stack + Drawer): organização completa de telas
+
+AuthEvents: atualização dinâmica do Drawer após login
+
+AsyncStorage: guarda token, nome e email do professor
+
+Axios: todas as chamadas HTTP com interceptadores opcionais
+
+Busca dinâmica: filtros em tempo real por título, conteúdo, autor e nome do professor
+
+Fluxo protegido: telas administrativas só abrem autenticadas
+
+🧭 Guia de Uso
+🔑 Login
+
+Professores entram com email e senha.
+Se válido → app recarrega navegação e mostra menu com nome do professor.
+
+📝 Home
+
+Mostra posts
+
+Busca por título, conteúdo e autor
+
+📄 Detalhes do Post
+
+Visualização completa
+
+Atualizações em tempo real
+
+🧑‍🏫 Administração
+
+Criar, editar e excluir posts
+
+Listar e pesquisar professores
+
+Excluir professores
+
+🧩 Desafios & Experiências do Projeto
+
+Integração de app mobile com API Node.js real
+
+Implementação de autenticação JWT no mobile
+
+Manutenção de sessão com AsyncStorage
+
+Criação de Drawer baseado em estado global
+
+Tratamento de erros e feedback visual ao usuário
+
+Animações e UX responsiva
+
+Padronização de telas usando componentes reutilizáveis
+
+Gestão de buscas complexas em listas
+
+📬 Contato
+
+Nome: César Augusto de Oliveira Santos
+Email: cesiha13@gmail.com
+
+GitHub: https://github.com/CesarAugusto13
+
+LinkedIn: [(Linkedin)](https://www.linkedin.com/in/c%C3%A9sar-augusto-de-oliveira-santos/)
