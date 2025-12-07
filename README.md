@@ -75,7 +75,7 @@ BlogFiap Mobile é a versão mobile da aplicação de blogging dinâmico voltada
 1. Clone o repositório:
 ```bash
 git clone https://github.com/CesarAugusto13/blogfiap-mobile.git
-cd educaon-mobile
+cd blogfiap-mobile
 ```
 
 2. Instale as dependências:
