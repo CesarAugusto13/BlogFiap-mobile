@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -9,6 +9,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import api from "../api/apiClient";
@@ -21,8 +22,10 @@ type Professor = {
 
 export default function ProfessoresListScreen({ navigation }: any) {
   const [professores, setProfessores] = useState<Professor[]>([]);
+  const [filteredProfessores, setFilteredProfessores] = useState<Professor[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   async function checkAuth() {
     const token = await AsyncStorage.getItem("accessToken");
@@ -50,6 +53,7 @@ export default function ProfessoresListScreen({ navigation }: any) {
 
       const items = res.data?.data ?? res.data ?? [];
       setProfessores(items);
+      setFilteredProfessores(items);
     } catch (err: any) {
       console.error("loadProfessores error:", err?.response ?? err);
       Alert.alert("Erro", "Não foi possível carregar os professores.");
@@ -65,6 +69,30 @@ export default function ProfessoresListScreen({ navigation }: any) {
     }, [])
   );
 
+  /* ------------------------------
+      🔍 Filtro de Pesquisa
+  ------------------------------ */
+  useEffect(() => {
+    if (!query.trim()) {
+      setFilteredProfessores(professores);
+      return;
+    }
+
+    const text = query.toLowerCase();
+
+    const filtrados = professores.filter((p) => {
+      return (
+        p.nome.toLowerCase().includes(text) ||
+        p.email.toLowerCase().includes(text)
+      );
+    });
+
+    setFilteredProfessores(filtrados);
+  }, [query, professores]);
+
+  /* ------------------------------
+      ❌ Excluir Professor
+  ------------------------------ */
   function deleteProfessor(id: string) {
     Alert.alert(
       "Excluir Professor",
@@ -90,6 +118,7 @@ export default function ProfessoresListScreen({ navigation }: any) {
 
               if (res.status === 200 || res.status === 204) {
                 setProfessores((prev) => prev.filter((p) => p._id !== id));
+                setFilteredProfessores((prev) => prev.filter((p) => p._id !== id));
                 Alert.alert("Sucesso", "Professor excluído.");
               } else {
                 Alert.alert("Erro", "Falha ao excluir.");
@@ -108,8 +137,23 @@ export default function ProfessoresListScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-
       <Text style={styles.title}>👨‍🏫 Professores</Text>
+
+      {/* 🔍 Campo de Busca */}
+      <View style={styles.searchRow}>
+        <TextInput
+          placeholder="Buscar por nome ou email..."
+          value={query}
+          onChangeText={setQuery}
+          style={styles.searchInput}
+          placeholderTextColor="#999"
+        />
+        {query.length > 0 && (
+          <Pressable onPress={() => setQuery("")} style={styles.clearBtn}>
+            <Text style={styles.clearText}>✕</Text>
+          </Pressable>
+        )}
+      </View>
 
       <Pressable
         style={styles.addBtn}
@@ -123,8 +167,11 @@ export default function ProfessoresListScreen({ navigation }: any) {
         <ActivityIndicator size="large" style={{ marginTop: 20 }} />
       ) : (
         <FlatList
-          data={professores}
+          data={filteredProfessores}
           keyExtractor={(item) => String(item._id)}
+          ListEmptyComponent={() => (
+            <Text style={styles.emptyText}>Nenhum professor encontrado 😕</Text>
+          )}
           renderItem={({ item }) => (
             <View style={styles.card}>
               <View>
@@ -133,28 +180,22 @@ export default function ProfessoresListScreen({ navigation }: any) {
               </View>
 
               <View style={styles.row}>
-
-                {/* BOTÃO EDITAR */}
                 <Pressable
                   style={styles.iconBtn}
                   hitSlop={12}
-                  onPress={() => {
+                  onPress={() =>
                     navigation.navigate("EditProfessor", {
                       professorId: item._id,
-                    });
-                  }}
+                    })
+                  }
                 >
                   <Ionicons name="create-outline" size={22} color="#007AFF" />
                 </Pressable>
 
-                {/* BOTÃO DELETAR — CORRIGIDO */}
                 <Pressable
                   style={styles.iconBtn}
                   hitSlop={12}
-                  onPress={() => {
-                    console.log("Delete pressed:", item._id);
-                    deleteProfessor(item._id);
-                  }}
+                  onPress={() => deleteProfessor(item._id)}
                   disabled={deletingId === item._id}
                 >
                   {deletingId === item._id ? (
@@ -175,9 +216,35 @@ export default function ProfessoresListScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#fff", paddingTop: 60 },
 
-  menuBtn: { position: "absolute", top: 12, left: 12, zIndex: 50, padding: 4 },
+  title: { fontSize: 24, fontWeight: "700", textAlign: "center", marginBottom: 20 },
 
-  title: { fontSize: 24, fontWeight: "700", textAlign: "center", marginVertical: 20 },
+  /* 🔍 Search */
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    backgroundColor: "#fafafa",
+    marginBottom: 12,
+  },
+
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    color: "#333",
+  },
+
+  clearBtn: {
+    paddingHorizontal: 8,
+  },
+
+  clearText: {
+    fontSize: 18,
+    color: "#888",
+  },
 
   addBtn: {
     backgroundColor: "#007AFF",
@@ -209,8 +276,12 @@ const styles = StyleSheet.create({
 
   row: { flexDirection: "row", gap: 14 },
 
-  iconBtn: {
-    padding: 6,
-    zIndex: 20,
+  iconBtn: { padding: 6 },
+
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
+    color: "#666",
   },
 });
